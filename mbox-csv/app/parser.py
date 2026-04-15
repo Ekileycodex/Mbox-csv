@@ -1,3 +1,4 @@
+import contextlib
 import csv
 import io
 import mailbox
@@ -129,7 +130,7 @@ def _iter_attachment_rows(
 def _normalize_options(options: Optional[Dict]) -> Dict[str, bool]:
     options = options or {}
     return {
-        "include_body":        True if options.get("include_body") is None else bool(options.get("include_body")),
+        "include_body":        options.get("include_body") is not False,
         "include_thread_id":   bool(options.get("include_thread_id")),
         "include_attachments": bool(options.get("include_attachments")),
     }
@@ -189,15 +190,16 @@ def parse_job(jid: str) -> None:
                         writer = csv.writer(emails_txt)
                         writer.writerow(header_fields)
 
-                        attachments_txt    = None
                         attachments_writer = None
-                        if include_attachments:
-                            att_member         = zf.open("attachments.csv", "w")
-                            attachments_txt    = io.TextIOWrapper(att_member, encoding="utf-8", newline="")
-                            attachments_writer = csv.writer(attachments_txt)
-                            attachments_writer.writerow(attachments_fields)
+                        with contextlib.ExitStack() as att_stack:
+                            if include_attachments:
+                                att_member         = zf.open("attachments.csv", "w")
+                                attachments_txt    = att_stack.enter_context(
+                                    io.TextIOWrapper(att_member, encoding="utf-8", newline="")
+                                )
+                                attachments_writer = csv.writer(attachments_txt)
+                                attachments_writer.writerow(attachments_fields)
 
-                        try:
                             for idx, key in enumerate(mbox_obj.iterkeys(), 1):
                                 with mbox_obj.get_file(key) as msg_fp:
                                     if include_body or include_attachments:
@@ -229,10 +231,6 @@ def parse_job(jid: str) -> None:
                                 if processed % update_interval == 0:
                                     j["processed"] = processed
                                     save_job(j)
-                        finally:
-                            if attachments_txt:
-                                attachments_txt.flush()
-                                attachments_txt.close()
 
             j["status"]         = "done"
             j["processed"]      = processed

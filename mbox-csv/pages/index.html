@@ -649,7 +649,7 @@ drop.addEventListener("drop",e=>{
   e.preventDefault();
   if(!e.dataTransfer.files.length) return;
   selected = e.dataTransfer.files[0];
-  drop.querySelector(".hint").innerHTML = `<b>Selected:</b> ${selected.name}`;
+  drop.querySelector(".hint").textContent = `Selected: ${selected.name}`;
   go.disabled = false;
   resetProgressTracking();
   updateProgress();
@@ -659,7 +659,7 @@ drop.addEventListener("drop",e=>{
 file.addEventListener("change",e=>{
   if(!e.target.files.length) return;
   selected = e.target.files[0];
-  drop.querySelector(".hint").innerHTML = `<b>Selected:</b> ${selected.name}`;
+  drop.querySelector(".hint").textContent = `Selected: ${selected.name}`;
   go.disabled = false;
   resetProgressTracking();
   updateProgress();

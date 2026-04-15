@@ -154,8 +154,8 @@ def ads_head():
 
 @app.get("/static/{filename}")
 def static_file(filename: str):
-    path = STATIC_DIR / filename
-    if not path.is_file():
+    path = (STATIC_DIR / filename).resolve()
+    if not path.is_relative_to(STATIC_DIR.resolve()) or not path.is_file():
         raise HTTPException(status_code=404)
     return FileResponse(str(path))
 
