@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -17,7 +18,10 @@ def load_job(jid: str) -> Optional[Dict]:
 
 
 def save_job(obj: Dict) -> None:
-    _jpath(obj["id"]).write_text(json.dumps(obj))
+    target = _jpath(obj["id"])
+    tmp = target.with_suffix(".tmp")
+    tmp.write_text(json.dumps(obj))
+    os.replace(tmp, target)
 
 
 def cleanup_job(jid: str, out_path: str) -> None:
